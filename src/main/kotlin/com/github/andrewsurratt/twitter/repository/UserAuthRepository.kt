@@ -1,9 +1,8 @@
 package com.github.andrewsurratt.twitter.repository
 
-import com.github.andrewsurratt.twitter.entity.Tweet
+import com.github.andrewsurratt.twitter.entity.UserAuth
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import java.util.*
 
 @Repository
-interface TweetRepository : JpaRepository<Tweet, UUID>
+interface UserAuthRepository : JpaRepository<UserAuth, String>

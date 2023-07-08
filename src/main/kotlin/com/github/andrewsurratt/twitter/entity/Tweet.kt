@@ -9,12 +9,12 @@ class Tweet() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     lateinit var tweet_id: UUID;
-    var user_id: String = "";
+    lateinit var user_id: UUID;
     var tweet: String = "";
     var created: Date = Date();
 
     constructor(
-        userId: String,
+        userId: UUID,
         tweet: String
     ) : this() {
         this.user_id = userId;
