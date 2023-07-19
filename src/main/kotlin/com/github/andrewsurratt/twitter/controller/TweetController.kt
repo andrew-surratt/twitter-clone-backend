@@ -33,17 +33,15 @@ class TweetController {
     fun createTweet(
         @RequestBody tweet: TweetRequestBody,
         req: HttpServletRequest,
-    ): List<Tweet> {
+    ): Tweet {
         val user = userRepository.findDistinctFirstByUsername(req.userPrincipal.name)
-        return listOf(
-            tweetRepository.save(
-                Tweet(
-                    user.user_id,
-                    tweet.tweetText
-                )
+        return tweetRepository.save(
+            Tweet(
+                user.userId,
+                tweet.tweetText
             )
         );
     }
 
-    public class TweetRequestBody(val tweetText: String)
+    class TweetRequestBody(val tweetText: String)
 }

@@ -8,7 +8,8 @@ import java.util.*
 class User() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    lateinit var user_id: UUID;
+    @Column(name = "user_id")
+    lateinit var userId: UUID;
     var username: String = "";
     var firstname: String = "";
     var lastname: String = "";

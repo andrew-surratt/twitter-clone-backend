@@ -34,7 +34,7 @@ class Configuration {
             }
             .httpBasic(withDefaults())
             .formLogin(withDefaults())
-        if (environment.get("spring.profiles.active").equals("development")) {
+        if (environment["spring.profiles.active"].equals("development")) {
             log.info("Disabling CSRF for development environment")
             http.csrf(CsrfConfigurer<HttpSecurity>::disable)
         }
@@ -43,7 +43,7 @@ class Configuration {
 
     @Bean
     fun dataSource(environment: Environment): DataSource {
-        val springDatasourceUrl = environment.get("spring.datasource.url")
+        val springDatasourceUrl = environment["spring.datasource.url"]
         log.info("Spring datasource $springDatasourceUrl")
         return DataSourceBuilder.create().url(springDatasourceUrl).build()
     }
@@ -64,7 +64,7 @@ class Configuration {
             .roles("ADMIN")
             .build()
         val createUsersErrors = createUsers(userManager, listOf(user, admin))
-        if (createUsersErrors.size > 0) {
+        if (createUsersErrors.isNotEmpty()) {
             log.error(
                 "'${createUsersErrors.size}' error(s) while creating users:\n${
                     createUsersErrors.map { error -> error.message }.joinToString("\n")
@@ -84,7 +84,7 @@ class Configuration {
         userManager: JdbcUserDetailsManager,
         users: List<UserDetails>
     ): List<Throwable> {
-        return users.map<UserDetails, Throwable?> { user ->
+        return users.mapNotNull { user ->
             try {
                 if (!userManager.userExists(user.username)) {
                     userManager.createUser(user)
@@ -94,6 +94,6 @@ class Configuration {
                 log.error("Error creating user ${user.username}:", error)
                 error;
             }
-        }.filterNotNull()
+        }
     }
 }

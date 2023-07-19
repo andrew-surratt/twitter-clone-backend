@@ -8,8 +8,10 @@ import java.util.*
 class Tweet() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    lateinit var tweet_id: UUID;
-    lateinit var user_id: UUID;
+    @Column(name = "tweet_id")
+    lateinit var tweetId: UUID;
+    @Column(name = "user_id")
+    lateinit var userId: UUID;
     var tweet: String = "";
     var created: Date = Date();
 
@@ -17,7 +19,8 @@ class Tweet() {
         userId: UUID,
         tweet: String
     ) : this() {
-        this.user_id = userId;
+        this.userId = userId;
         this.tweet = tweet;
+        this.created = Date();
     }
 }
