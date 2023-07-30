@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
-import org.springframework.security.config.Customizer.withDefaults
+import org.springframework.http.HttpMethod
+import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
@@ -27,17 +28,16 @@ class Configuration {
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity, environment: Environment): SecurityFilterChain {
-        http
-            .authorizeHttpRequests { authorization ->
-                authorization
-                    .anyRequest().authenticated()
-            }
-            .httpBasic(withDefaults())
-            .formLogin(withDefaults())
         if (environment["spring.profiles.active"].equals("development")) {
-            log.info("Disabling CSRF for development environment")
+            log.info("Disabling CSRF and CORS for development environment")
             http.csrf(CsrfConfigurer<HttpSecurity>::disable)
+                .cors { cors -> cors.disable() }
         }
+        http.authorizeHttpRequests { authorization ->
+                authorization
+                    .requestMatchers(HttpMethod.OPTIONS,"*").permitAll()
+                    .anyRequest().authenticated()
+            }.httpBasic(Customizer.withDefaults())
         return http.build()
     }
 
@@ -54,7 +54,7 @@ class Configuration {
         val userManager = JdbcUserDetailsManager(dataSource)
         // Demo Users
         val user: UserDetails = User.withDefaultPasswordEncoder()
-            .username("testuser")
+            .username("test")
             .password("password")
             .roles("USER")
             .build()

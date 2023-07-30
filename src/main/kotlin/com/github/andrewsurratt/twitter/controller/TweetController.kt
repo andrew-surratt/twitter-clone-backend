@@ -6,13 +6,11 @@ import com.github.andrewsurratt.twitter.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
+@CrossOrigin(originPatterns = ["http://localhost*"])
 class TweetController {
     @Autowired
     private lateinit var tweetRepository: TweetRepository;
@@ -37,7 +35,7 @@ class TweetController {
         val user = userRepository.findDistinctFirstByUsername(req.userPrincipal.name)
         return tweetRepository.save(
             Tweet(
-                user.userId,
+                user,
                 tweet.tweetText
             )
         );

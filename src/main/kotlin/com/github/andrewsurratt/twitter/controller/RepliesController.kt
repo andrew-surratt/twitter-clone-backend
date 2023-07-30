@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
 @RestController
+@CrossOrigin(originPatterns = ["http://localhost*"])
 class RepliesController {
     private val log: Log = LogFactory.getLog(RepliesController::class.java.name)
 
