@@ -19,7 +19,7 @@ class Tweet() {
     @JsonManagedReference
     lateinit var user: User;
 
-    @OneToMany(mappedBy = "tweet")
+    @OneToMany(mappedBy = "tweet", cascade = [CascadeType.REMOVE])
     @JsonManagedReference
     var replies: List<Reply> = emptyList();
 

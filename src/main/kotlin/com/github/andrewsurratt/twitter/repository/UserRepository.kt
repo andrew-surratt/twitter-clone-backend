@@ -7,5 +7,5 @@ import java.util.*
 
 @Repository
 interface UserRepository : JpaRepository<User, UUID> {
-    fun findDistinctFirstByUsername(username: String): User
+    fun findDistinctFirstByUsername(username: String): User?
 }

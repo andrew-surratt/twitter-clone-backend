@@ -2,6 +2,7 @@ package com.github.andrewsurratt.twitter
 
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.jdbc.DataSourceBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,6 +23,7 @@ import javax.sql.DataSource
 
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties(ConfigurationProperties::class)
 class Configuration {
     private val log: Log = LogFactory.getLog(com.github.andrewsurratt.twitter.Configuration::class.java.name)
 
@@ -49,21 +51,20 @@ class Configuration {
     }
 
     @Bean
-    fun users(dataSource: DataSource): UserDetailsManager? {
+    fun users(
+        dataSource: DataSource,
+        environment: Environment,
+        configurationProperties: ConfigurationProperties
+    ): UserDetailsManager? {
         log.info("Create users")
         val userManager = JdbcUserDetailsManager(dataSource)
         // Demo Users
-        val user: UserDetails = User.withDefaultPasswordEncoder()
-            .username("test")
-            .password("password")
-            .roles("USER")
-            .build()
-        val admin: UserDetails = User.withDefaultPasswordEncoder()
-            .username("admin")
-            .password("password")
-            .roles("ADMIN")
-            .build()
-        val createUsersErrors = createUsers(userManager, listOf(user, admin))
+        val demoUsers: List<UserDetails> = configurationProperties.users.map { u -> User.withDefaultPasswordEncoder()
+            .username(u.name)
+            .password(u.password)
+            .roles(u.role)
+            .build() }
+        val createUsersErrors = createUsers(userManager, demoUsers)
         if (createUsersErrors.isNotEmpty()) {
             log.error(
                 "'${createUsersErrors.size}' error(s) while creating users:\n${

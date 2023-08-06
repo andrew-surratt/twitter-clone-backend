@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -40,7 +41,7 @@ class RepliesController {
     fun createReply(
         @RequestBody reply: ReplyRequestBody,
         req: HttpServletRequest,
-    ): Reply {
+    ): ResponseEntity<Reply> {
         log.info("Creating reply with tweet id ${reply.tweetId}")
         val tweet: Tweet = tweetRepository.findById(reply.tweetId).orElseThrow {
             ResponseStatusException(
@@ -49,13 +50,15 @@ class RepliesController {
         };
         log.info("Retrieved tweet")
         val user = userRepository.findDistinctFirstByUsername(req.userPrincipal.name)
-        return repliesRepository.save(
+            ?: return ResponseEntity.badRequest().build()
+        val replyResponse = repliesRepository.save(
             Reply(
                 tweet,
                 user.userId,
                 reply.replyText
             )
-        );
+        )
+        return ResponseEntity.ok(replyResponse)
     }
 
     class ReplyRequestBody(val tweetId: UUID, val replyText: String)

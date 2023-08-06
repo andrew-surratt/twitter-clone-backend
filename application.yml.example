@@ -1,0 +1,6 @@
+spring:
+  profiles:
+    active: development
+    group:
+      development: development
+      test: test

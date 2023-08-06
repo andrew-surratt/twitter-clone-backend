@@ -1,0 +1,8 @@
+custom:
+  users:
+    - name: endUser
+      password: <INSERT-PASSWORD>
+      role: USER
+    - name: adminUser
+      password: <INSERT-PASSWORD>
+      role: ADMIN
