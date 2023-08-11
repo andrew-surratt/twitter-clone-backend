@@ -1,5 +1,6 @@
 package com.github.andrewsurratt.twitter.entity
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
 import java.util.*
 
@@ -10,16 +11,23 @@ class Tweet() {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "tweet_id")
     lateinit var tweetId: UUID;
-    @Column(name = "user_id")
-    lateinit var userId: UUID;
     var tweet: String = "";
     var created: Date = Date();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonManagedReference
+    lateinit var user: User;
+
+    @OneToMany(mappedBy = "tweet", cascade = [CascadeType.REMOVE])
+    @JsonManagedReference
+    var replies: List<Reply> = emptyList();
+
     constructor(
-        userId: UUID,
+        user: User,
         tweet: String
     ) : this() {
-        this.userId = userId;
+        this.user = user;
         this.tweet = tweet;
         this.created = Date();
     }

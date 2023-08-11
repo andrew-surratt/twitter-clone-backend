@@ -1,5 +1,6 @@
 package com.github.andrewsurratt.twitter.entity
 
+import com.fasterxml.jackson.annotation.JsonBackReference
 import jakarta.persistence.*
 import java.util.*
 
@@ -14,6 +15,10 @@ class User() {
     var firstname: String = "";
     var lastname: String = "";
     var created: Date = Date();
+
+    @OneToMany(mappedBy = "user")
+    @JsonBackReference
+    var tweets: List<Tweet> = emptyList();
 
     constructor(
         username: String,

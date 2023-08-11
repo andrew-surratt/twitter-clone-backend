@@ -1,0 +1,8 @@
+custom:
+  users:
+    - name: testEndUser
+      password: password
+      role: USER
+    - name: testAdminUser
+      password: password
+      role: ADMIN
