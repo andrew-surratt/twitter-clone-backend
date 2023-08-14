@@ -45,23 +45,34 @@ class TweetController {
         return ResponseEntity.ok(tweetResponse)
     }
 
+    @GetMapping(
+        value = ["/tweet/{id}"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getTweet(
+        @PathVariable id: UUID,
+        req: HttpServletRequest,
+    ): ResponseEntity<Tweet> {
+        val tweet = tweetRepository.findById(id).getOrNull()
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(tweet)
+    }
+
     @DeleteMapping(
-        value = ["/tweet"],
-        produces = [MediaType.APPLICATION_JSON_VALUE],
-        consumes = [MediaType.APPLICATION_JSON_VALUE]
+        value = ["/tweet/{id}"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun deleteTweet(
-        @RequestBody tweetReq: DeleteTweetRequestBody,
+        @PathVariable id: UUID,
         req: HttpServletRequest,
     ): ResponseEntity<Tweet> {
         userRepository.findDistinctFirstByUsername(req.userPrincipal.name)
             ?: return ResponseEntity.badRequest().build()
-        val tweet = tweetRepository.findById(tweetReq.tweetId).getOrNull()
+        val tweet = tweetRepository.findById(id).getOrNull()
             ?: return ResponseEntity.badRequest().build()
         tweetRepository.delete(tweet)
         return ResponseEntity.ok().build()
     }
 
     class TweetRequestBody(val tweetText: String)
-    class DeleteTweetRequestBody(val tweetId: UUID)
 }

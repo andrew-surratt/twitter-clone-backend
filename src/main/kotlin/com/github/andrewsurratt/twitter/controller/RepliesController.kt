@@ -13,11 +13,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @RestController
 @CrossOrigin(originPatterns = ["http://localhost*"])
@@ -45,7 +48,7 @@ class RepliesController {
         log.info("Creating reply with tweet id ${reply.tweetId}")
         val tweet: Tweet = tweetRepository.findById(reply.tweetId).orElseThrow {
             ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "Tweet with ID ${reply.tweetId} does not exist."
+                HttpStatus.NOT_FOUND, "Tweet with ID ${reply.tweetId} does not exist."
             )
         };
         log.info("Retrieved tweet")
@@ -54,10 +57,23 @@ class RepliesController {
         val replyResponse = repliesRepository.save(
             Reply(
                 tweet,
-                user.userId,
+                user,
                 reply.replyText
             )
         )
+        return ResponseEntity.ok(replyResponse)
+    }
+
+    @GetMapping(
+        value = ["/reply/{id}"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getReply(
+        @PathVariable id: UUID,
+        req: HttpServletRequest,
+    ): ResponseEntity<Reply> {
+        val replyResponse = repliesRepository.findById(id).getOrNull()
+            ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(replyResponse)
     }
 

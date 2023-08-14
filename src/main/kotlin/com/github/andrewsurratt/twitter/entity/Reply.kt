@@ -18,18 +18,21 @@ class Reply() {
     @JsonBackReference
     lateinit var tweet: Tweet;
 
-    @Column(name = "user_id")
-    lateinit var userId: UUID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonManagedReference
+    lateinit var user: User;
+
     var reply: String = "";
     var created: Date = Date();
 
     constructor(
         tweet: Tweet,
-        userId: UUID,
+        user: User,
         reply: String
     ) : this() {
         this.tweet = tweet;
-        this.userId = userId;
+        this.user = user;
         this.reply = reply;
         this.created = Date();
     }
