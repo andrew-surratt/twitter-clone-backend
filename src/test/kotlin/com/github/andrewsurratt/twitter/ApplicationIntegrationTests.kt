@@ -40,6 +40,8 @@ class ApplicationIntegrationTests {
 
 	private lateinit var tweetControllerUrl: String
 
+	private lateinit var replyControllerUrl: String
+
 	private fun createURLWithPort(path: String = "/user"): String {
 		return "http://localhost:$port$path"
 	}
@@ -48,6 +50,7 @@ class ApplicationIntegrationTests {
 	fun init() {
 		this.userControllerUrl = createURLWithPort("/user")
 		this.tweetControllerUrl = createURLWithPort("/tweet")
+		this.replyControllerUrl = createURLWithPort("/reply")
 		this.endUserConfig = configurationProperties.users.find { u -> u.role == "USER" }!!
 		this.endUser = User(
 				endUserConfig.name,
@@ -91,7 +94,60 @@ class ApplicationIntegrationTests {
 		testRegisterUser(endUser)
 
 		val expectedTweet = "test tweet text"
-		val entity = HttpEntity<String>("{\"tweetText\":\"$expectedTweet\"}}", endUserHeaders)
+		val tweetIdResponse = testCreateTweet(expectedTweet)
+		assertNotNull(tweetIdResponse)
+		testGetTweet(tweetIdResponse!!, HttpStatusCode.valueOf(200), expectedTweet)
+		val replyText = "test reply text"
+		val replyId = testCreateReply(tweetIdResponse, replyText)
+		assertNotNull(replyId)
+		testGetReply(replyId!!, HttpStatusCode.valueOf(200), replyText)
+
+		testDeleteTweet(tweetIdResponse)
+		testGetTweet(tweetIdResponse, HttpStatusCode.valueOf(404), null)
+		testGetReply(replyId, HttpStatusCode.valueOf(404), null)
+		testDeleteUser()
+	}
+
+	private fun testCreateReply(tweetId: String, replyText: String): String? {
+		val entity = HttpEntity<String>("{\"tweetId\":\"$tweetId\",\"replyText\":\"$replyText\"}", endUserHeaders)
+		val response: ResponseEntity<String> = this.restTemplate.exchange(
+			replyControllerUrl,
+			HttpMethod.POST,
+			entity,
+			String::class.java
+		)
+
+		assertEquals(HttpStatusCode.valueOf(200), response.statusCode)
+		assertNotNull(response.body)
+		assertJsonResponse(response.body!!, replyText, "reply")
+		assertJsonResponse(response.body!!, endUser.username, "username")
+		val replyId = getUUIDPropertyFromJson("replyId", response.body!!)
+		assertNotNull(replyId)
+		return replyId
+	}
+
+	private fun testGetReply(
+		replyId: String,
+		expectedResponseCode: HttpStatusCode = HttpStatusCode.valueOf(200),
+		expectedResponse: String?
+	) {
+		val entity = HttpEntity<String>(endUserHeaders)
+		val response: ResponseEntity<String> = this.restTemplate.exchange(
+			"$replyControllerUrl/$replyId",
+			HttpMethod.GET,
+			entity,
+			String::class.java
+		)
+
+		assertEquals(expectedResponseCode, response.statusCode)
+		if (expectedResponse != null) {
+			assertNotNull(response.body)
+			assertJsonResponse(response.body!!, expectedResponse, "reply")
+		}
+	}
+
+	private fun testCreateTweet(expectedTweet: String): String? {
+		val entity = HttpEntity<String>("{\"tweetText\":\"$expectedTweet\"}", endUserHeaders)
 		val response: ResponseEntity<String> = this.restTemplate.exchange(
 			tweetControllerUrl,
 			HttpMethod.POST,
@@ -102,17 +158,36 @@ class ApplicationIntegrationTests {
 		assertEquals(HttpStatusCode.valueOf(200), response.statusCode)
 		assertNotNull(response.body)
 		assertJsonResponse(response.body!!, expectedTweet, "tweet")
-		val tweetIdResponse = getTweetIdFromJson(response.body!!)
+		assertJsonResponse(response.body!!, endUser.username, "username")
+		val tweetIdResponse = getUUIDPropertyFromJson("tweetId", response.body!!)
 		assertNotNull(tweetIdResponse)
+		return tweetIdResponse
+	}
 
-		testDeleteTweet(tweetIdResponse!!)
-		testDeleteUser()
+	private fun testGetTweet(
+		tweetId: String,
+		expectedResponseCode: HttpStatusCode = HttpStatusCode.valueOf(200),
+		expectedResponse: String?
+	) {
+		val entity = HttpEntity<String>(endUserHeaders)
+		val response: ResponseEntity<String> = this.restTemplate.exchange(
+			"$tweetControllerUrl/$tweetId",
+			HttpMethod.GET,
+			entity,
+			String::class.java
+		)
+
+		assertEquals(expectedResponseCode, response.statusCode)
+		if (expectedResponse != null) {
+			assertNotNull(response.body)
+			assertJsonResponse(response.body!!, expectedResponse, "tweet")
+		}
 	}
 
 	private fun testDeleteTweet(tweetId: String) {
-		val entity = HttpEntity<String>("{\"tweetId\":\"$tweetId\"}}", endUserHeaders)
+		val entity = HttpEntity<String>(endUserHeaders)
 		val response: ResponseEntity<String> = this.restTemplate.exchange(
-			tweetControllerUrl,
+			"$tweetControllerUrl/$tweetId",
 			HttpMethod.DELETE,
 			entity,
 			String::class.java
@@ -120,8 +195,8 @@ class ApplicationIntegrationTests {
 		assertEquals(HttpStatusCode.valueOf(200), response.statusCode)
 	}
 
-	private fun getTweetIdFromJson(responseBody: String) =
-		Regex("(\"tweetId\":\")(.{36})").find(responseBody.toString())?.groupValues?.get(2)
+	private fun getUUIDPropertyFromJson(property: String, responseBody: String): String? =
+		Regex("(\"$property\":\")(.{36})").find(responseBody)?.groupValues?.get(2)
 
 	private fun testRegisterUser(user: User) {
 		val entity = HttpEntity<String>(
