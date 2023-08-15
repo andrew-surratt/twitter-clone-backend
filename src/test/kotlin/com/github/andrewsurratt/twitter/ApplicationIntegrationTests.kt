@@ -54,8 +54,9 @@ class ApplicationIntegrationTests {
 		this.endUserConfig = configurationProperties.users.find { u -> u.role == "USER" }!!
 		this.endUser = User(
 				endUserConfig.name,
-		"testFirstname",
-		"testLastname"
+			"testFirstname",
+			"testLastname",
+			"testProfilePictureUrl"
 		)
 		this.endUserHeaders = HttpHeaders()
 		this.endUserHeaders.contentType = MediaType.APPLICATION_JSON
@@ -75,6 +76,14 @@ class ApplicationIntegrationTests {
 	fun testUserLifecycle() {
 		testRegisterUser(endUser)
 		testGetUser(endUser, HttpStatusCode.valueOf(200))
+		val patchedUser = User(
+			endUser.username,
+			endUser.firstname,
+			endUser.lastname,
+			"testPatchedUrl"
+		)
+		testPatchUser(patchedUser)
+		testGetUser(patchedUser, HttpStatusCode.valueOf(200))
 		testDeleteUser(HttpStatusCode.valueOf(200))
 		testGetUser(null, HttpStatusCode.valueOf(404))
 	}
@@ -200,7 +209,7 @@ class ApplicationIntegrationTests {
 
 	private fun testRegisterUser(user: User) {
 		val entity = HttpEntity<String>(
-			"{\"firstname\":\"${user.firstname}\",\"lastname\":\"${user.lastname}\"}",
+			"{\"firstname\":\"${user.firstname}\",\"lastname\":\"${user.lastname}\",\"profilePictureUrl\":\"${user.profilePictureUrl}\"}",
 			endUserHeaders
 		)
 		val response: ResponseEntity<String> = this.restTemplate.exchange(
@@ -229,6 +238,20 @@ class ApplicationIntegrationTests {
 		assertUserResponse(response.body, expectedUser)
 	}
 
+	private fun testPatchUser(patchedUser: User) {
+		val entity = HttpEntity<String>("{\"profilePictureUrl\":\"${patchedUser.profilePictureUrl}\"}", endUserHeaders)
+		val response: ResponseEntity<String> = this.restTemplate.exchange(
+			userControllerUrl,
+			HttpMethod.PATCH,
+			entity,
+			String::class.java
+		)
+
+		assertEquals(HttpStatusCode.valueOf(200), response.statusCode)
+
+		assertUserResponse(response.body, patchedUser)
+	}
+
 	private fun testDeleteUser(expectedResponseCode: HttpStatusCode = HttpStatusCode.valueOf(200)) {
 		val entity = HttpEntity<String>(null, endUserHeaders)
 		val response: ResponseEntity<String> = this.restTemplate.exchange(
@@ -250,6 +273,7 @@ class ApplicationIntegrationTests {
 			assertJsonResponse(responseBody, user.username, "username")
 			assertJsonResponse(responseBody, user.firstname, "firstname")
 			assertJsonResponse(responseBody, user.lastname, "lastname")
+			assertJsonResponse(responseBody, user.profilePictureUrl, "profilePictureUrl")
 		}
 	}
 

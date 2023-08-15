@@ -14,6 +14,7 @@ class User() {
     var username: String = "";
     var firstname: String = "";
     var lastname: String = "";
+    var profilePictureUrl: String = "";
     var created: Date = Date();
 
     @OneToMany(mappedBy = "user")
@@ -24,10 +25,12 @@ class User() {
         username: String,
         firstname: String,
         lastname: String,
+        profilePictureUrl: String,
     ) : this() {
         this.username = username;
         this.firstname = firstname;
         this.lastname = lastname;
+        this.profilePictureUrl = profilePictureUrl;
         this.created = Date();
     }
 }
