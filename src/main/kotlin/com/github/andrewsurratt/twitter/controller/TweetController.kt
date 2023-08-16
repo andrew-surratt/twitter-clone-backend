@@ -5,6 +5,7 @@ import com.github.andrewsurratt.twitter.repository.TweetRepository
 import com.github.andrewsurratt.twitter.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Sort
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -22,7 +23,9 @@ class TweetController {
 
     @RequestMapping("/tweets")
     fun getTweets(): List<Tweet> {
-        return tweetRepository.findAll();
+        return tweetRepository.findAll(Sort.by(
+            Sort.Order.desc("created")
+        ));
     }
 
     @PostMapping(
