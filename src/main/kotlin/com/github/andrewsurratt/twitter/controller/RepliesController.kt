@@ -2,9 +2,11 @@ package com.github.andrewsurratt.twitter.controller
 
 import com.github.andrewsurratt.twitter.entity.Reply
 import com.github.andrewsurratt.twitter.entity.Tweet
+import com.github.andrewsurratt.twitter.entity.User
 import com.github.andrewsurratt.twitter.repository.RepliesRepository
-import com.github.andrewsurratt.twitter.repository.TweetRepository
-import com.github.andrewsurratt.twitter.repository.UserRepository
+import com.github.andrewsurratt.twitter.services.RepliesService
+import com.github.andrewsurratt.twitter.services.TweetService
+import com.github.andrewsurratt.twitter.services.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
@@ -28,13 +30,16 @@ class RepliesController {
     private val log: Log = LogFactory.getLog(RepliesController::class.java.name)
 
     @Autowired
+    private lateinit var repliesService: RepliesService
+
+    @Autowired
     private lateinit var repliesRepository: RepliesRepository;
 
     @Autowired
-    private lateinit var tweetRepository: TweetRepository;
+    private lateinit var tweetService: TweetService
 
     @Autowired
-    private lateinit var userRepository: UserRepository;
+    private lateinit var userService: UserService
 
     @PostMapping(
         value = ["/reply"],
@@ -46,22 +51,27 @@ class RepliesController {
         req: HttpServletRequest,
     ): ResponseEntity<Reply> {
         log.info("Creating reply with tweet id ${reply.tweetId}")
-        val tweet: Tweet = tweetRepository.findById(reply.tweetId).orElseThrow {
-            ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Tweet with ID ${reply.tweetId} does not exist."
+        val tweet: Tweet = tweetService.getTweetById(reply.tweetId).getOrElse {throw ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Tweet with ID ${reply.tweetId} does not exist.", it
+        )}
+        val username = req.userPrincipal.name
+        val user: User = userService.getUserByUsername(username).getOrElse {
+            throw ResponseStatusException(
+                HttpStatus.NOT_FOUND, "User with username $username does not exist.", it
             )
-        };
-        log.info("Retrieved tweet")
-        val user = userRepository.findDistinctFirstByUsername(req.userPrincipal.name)
-            ?: return ResponseEntity.badRequest().build()
-        val replyResponse = repliesRepository.save(
-            Reply(
-                tweet,
-                user,
-                reply.replyText
+        }
+        val createdReply = repliesService.createReplyForUser(
+            tweet,
+            user,
+            reply.replyText
+        ).getOrElse {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unknown error creating reply",
+                it
             )
-        )
-        return ResponseEntity.ok(replyResponse)
+        }
+        return ResponseEntity.ok(createdReply)
     }
 
     @GetMapping(

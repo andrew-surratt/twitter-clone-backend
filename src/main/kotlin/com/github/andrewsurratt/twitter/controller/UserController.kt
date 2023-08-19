@@ -36,9 +36,9 @@ class UserController {
         }
         val user = User(
             username,
-            body.firstname,
-            body.lastname,
-            body.profilePictureUrl
+            body.firstname ?: "",
+            body.lastname ?: "",
+            body.profilePictureUrl ?: ""
         )
         userRepository.save(user)
         return ResponseEntity.ok(user)
@@ -82,9 +82,9 @@ class UserController {
     }
 
     class CreateUserRequestBody(
-        val firstname: String,
-        val lastname: String,
-        val profilePictureUrl: String
+        val firstname: String?,
+        val lastname: String?,
+        val profilePictureUrl: String?
     )
 
     class PatchUserRequestBody(
