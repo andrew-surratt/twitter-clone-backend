@@ -4,3 +4,7 @@ spring:
     group:
       development: development
       test: test
+custom:
+  api:
+    googleFactCheck:
+      apiKey: INSERT_KEY
