@@ -1,5 +1,6 @@
 package com.github.andrewsurratt.twitter.controller
 
+import com.github.andrewsurratt.twitter.entity.Reply
 import com.github.andrewsurratt.twitter.entity.Tweet
 import com.github.andrewsurratt.twitter.repository.TweetRepository
 import com.github.andrewsurratt.twitter.repository.UserRepository
@@ -57,25 +58,38 @@ class TweetController {
                 tweet.tweetText
             )
         )
+        checkClaims(tweetResponse).getOrElse { e -> when (e) {
+            is IllegalArgumentException -> log.warn(e.message, e)
+            else -> log.error(e.message, e)
+        } }
+        return ResponseEntity.ok(tweetResponse)
+    }
+
+    private fun checkClaims(
+        tweet: Tweet,
+        botUsername: String = "umbot"
+    ): Result<Reply?> {
         try {
             val checkClaim: GoogleFactCheckService.ClaimResponse? = googleFactCheckService.checkClaim(
-                tweet.tweetText
+                tweet.tweet
             )
             val claimReview = checkClaim?.claims?.getOrNull(0)?.claimReview?.getOrNull(0)
             if (claimReview != null) {
-                val botUser = userRepository.findDistinctFirstByUsername("umbot")
-                    ?: return ResponseEntity.internalServerError().build()
+                val botUser = userRepository.findDistinctFirstByUsername(botUsername)
+                    ?: return Result.failure(IllegalArgumentException("Bot $botUsername doesn't exist"))
                 val botReply = repliesService.createReplyForUser(
-                    tweetResponse,
+                    tweet,
                     botUser,
-                    "Um actually, ${claimReview.textualRating}. ${claimReview.title}. ${claimReview.url}"
+                    "Um actually, that's ${claimReview.textualRating.lowercase()}. Source: ${claimReview.title}. ${claimReview.url}"
                 )
-                log.info("Created reply check for ${tweet.tweetText}: ${botReply.map { it.replyId }} $checkClaim")
+                log.info("Created reply check for ${tweet.tweet}: ${botReply.map { it.replyId }} $checkClaim")
+                return botReply
             }
+            return Result.success(null)
         } catch (e: Exception) {
             log.error("Failed to check claim for tweet: ", e)
+            return Result.failure(e)
         }
-        return ResponseEntity.ok(tweetResponse)
     }
 
     @GetMapping(

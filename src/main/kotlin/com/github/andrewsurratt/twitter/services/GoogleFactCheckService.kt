@@ -22,6 +22,8 @@ import java.net.URLEncoder
 
 @Service
 class GoogleFactCheckService {
+    private val log: Log = LogFactory.getLog(GoogleFactCheckService::class.java.name)
+
     private var client: WebClient = WebClient.create("https://factchecktools.googleapis.com");
 
     @Autowired
@@ -29,9 +31,11 @@ class GoogleFactCheckService {
 
     fun checkClaim(query: String): ClaimResponse?  {
         val key = configurationProperties.api.googleFactCheck.apiKey
+        val encodedQuery = URLEncoder.encode(query, "UTF-8")
+        log.info("[checkClaim] Sending encoded query $encodedQuery")
         return runBlocking {
             client.get()
-                .uri("/v1alpha1/claims:search?languageCode=en&pageSize=3&query={query}&key={key}", URLEncoder.encode(query, "UTF-8"), key)
+                .uri("/v1alpha1/claims:search?languageCode=en&pageSize=3&query={query}&key={key}", query, key)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().awaitBody<ClaimResponse>()
         }
