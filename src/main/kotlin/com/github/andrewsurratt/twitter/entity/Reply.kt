@@ -3,6 +3,8 @@ package com.github.andrewsurratt.twitter.entity
 import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
+import java.time.Clock
+import java.time.Instant
 import java.util.*
 
 @Entity
@@ -24,16 +26,17 @@ class Reply() {
     lateinit var user: User;
 
     var reply: String = "";
-    var created: Date = Date();
+    var created: Instant = Instant.now(Clock.systemUTC());
 
     constructor(
         tweet: Tweet,
         user: User,
-        reply: String
+        reply: String,
+        created: Instant = Instant.now(Clock.systemUTC())
     ) : this() {
         this.tweet = tweet;
         this.user = user;
         this.reply = reply;
-        this.created = Date();
+        this.created = created;
     }
 }
