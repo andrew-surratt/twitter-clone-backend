@@ -90,10 +90,10 @@ class GoogleFactCheckService {
             val objectMapper = ObjectMapper()
             val claimant = tree.get("claimant")
             return Claim(
-                tree.get("text").asText(),
+                tree.get("text")?.asText() ?: "",
                 if (claimant == null) "" else claimant.asText(),
                 tree.get("claimDate")?.asText() ?: "",
-                objectMapper.readValue(tree.get("claimReview").toString(), Array<ClaimReview>::class.java).asList(),
+                objectMapper.readValue(tree.get("claimReview")?.toString() ?: "[]", Array<ClaimReview>::class.java).asList(),
             )
         }
     }
@@ -104,11 +104,11 @@ class GoogleFactCheckService {
             val codec: ObjectCodec = jsonParser.codec
             val tree: JsonNode = codec.readTree(jsonParser)
             return ClaimReview(
-                tree.get("url").asText(),
-                tree.get("title").asText(),
-                tree.get("reviewDate").asText(),
-                tree.get("textualRating").asText(),
-                tree.get("languageCode").asText(),
+                tree.get("url")?.asText() ?: "",
+                tree.get("title")?.asText() ?: "",
+                tree.get("reviewDate")?.asText() ?: "",
+                tree.get("textualRating")?.asText() ?: "",
+                tree.get("languageCode")?.asText() ?: "",
             )
         }
     }

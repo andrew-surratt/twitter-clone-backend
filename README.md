@@ -1,4 +1,7 @@
-# Twitter Clone
+# Twitter API Clone With Fact Checking
+Minimal twitter clone with a built-in fact checker utilizing Google Fact Check API.
+
+Can be used with [Twitter Frontend](https://github.com/andrew-surratt/twitter-clone-frontend) for a UI.
 
 ## Prerequisites
 Install Postgres
@@ -21,7 +24,7 @@ Start Postgres
 Start App
 `mvn spring-boot:run`
 
-## Test
+## Test (Integration)
 `mvn clean test`
 
 ## Stop
